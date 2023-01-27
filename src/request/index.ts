@@ -8,7 +8,7 @@ import { NexusRequestOptions, NexusFullResponse, NexusData } from '../interface'
 import { InvalidArgumentException } from '../exception'
 
 export class Request {
-	protected version: string = '0.0.1'
+	protected version: string = '1.0.0'
 	public options: NexusRequestOptions
 
 	constructor(options?: NexusRequestOptions) {
@@ -29,7 +29,6 @@ export class Request {
 				throw new InvalidArgumentException('URL must be a string')
 			if (!url) throw new InvalidArgumentException('No URL provided')
 			let baseURL = new URL(url)
-			console.log(baseURL)
 
 			requestURL = `${baseURL.host}${baseURL.port && `:${baseURL.port}`}${
 				baseURL.pathname ? baseURL.pathname : ''

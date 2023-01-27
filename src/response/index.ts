@@ -1,4 +1,3 @@
-import { NexusRequestOptions } from './../interface/nexus-request-options.interface'
 import { Duplex } from 'stream'
 import JSONbigInt from 'json-bigint'
 
@@ -19,8 +18,7 @@ export class Response {
 
 	private readonly compressedEncondings: string[] = [
 		'zstd',
-		'gzip',
-		'deflate',
+		'gzip'
 	]
 
 	private options?: NexusResponseOptions

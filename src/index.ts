@@ -3,7 +3,6 @@ import { Request } from './request'
 import { Response } from './response'
 
 import { NexusRequestOptions, NexusResponse } from './interface'
-import { NexusResponseException } from './exception'
 
 export class Nexus {
 	public options?: NexusRequestOptions
@@ -70,27 +69,25 @@ export class Nexus {
 		path?: string,
 		data?: NexusData,
 	): Promise<NexusResponse> {
-        const response = await this.request.make(method, path, {
-            headers: {
-                ...this.headersData,
-                ...data?.headers,
-            },
-            params: {
-                ...this.paramsData,
-                ...data?.params,
-            },
-            data: {
-                ...this.postData,
-                ...data?.data,
-            },
-        })
-        return await this.response.build(response)
+		const response = await this.request.make(method, path, {
+			headers: {
+				...this.headersData,
+				...data?.headers,
+			},
+			params: {
+				...this.paramsData,
+				...data?.params,
+			},
+			data: {
+				...this.postData,
+				...data?.data,
+			},
+		})
+		return await this.response.build(response)
 	}
 }
 
-export default async function nexus(
-	options?: NexusRequestOptions,
-): Promise<Nexus | NexusResponse> {
+export default function nexus(options?: NexusRequestOptions): Nexus {
 	const nexusInstance = new Nexus(options)
 	if (options?.method) {
 		return nexusInstance[options.method.toLowerCase()](

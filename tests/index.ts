@@ -3,8 +3,8 @@ import nexus from '../src/'
 async function routine() {
 	const api = nexus({
 		http2: true,
-		baseURL: 'https://httpbin.org',
-        setURLEncoded: true,
+		baseURL: 'https://httpbin.org/',
+		setURLEncoded: false,
 		response: {
 			transformJson: true,
 			stringifyBigInt: true,
@@ -15,11 +15,11 @@ async function routine() {
 	const response = await api
 		.addHeader('Foo', 'Bar')
 		.addPost('post-data', 'data-post')
-		.post('/post', {
-            data: {
-                foo: 'bar'
-            }
-        })
+		.post('post', {
+			data: {
+				foo: 'bar',
+			},
+		})
 	console.log(response.data)
 }
 
