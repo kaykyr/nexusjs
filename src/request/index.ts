@@ -2,7 +2,7 @@ import http, { IncomingMessage } from 'node:http'
 import https from 'node:https'
 import http2 from 'node:http2'
 
-import { NexusRequestOptions, NexusResponse } from '../interface'
+import { NexusRequestOptions, NexusResponse, NexusData } from '../interface'
 import { InvalidArgumentException } from '../exception'
 
 export class Request {
@@ -12,26 +12,10 @@ export class Request {
 		this.options = options || {}
 	}
 
-	public async get(path?: string, getParams?: object): Promise<any> {
-		return this.request('GET', path)
-	}
-
-	public async post(path?: string, postData?: object): Promise<any> {
-		return this.request('POST', path, postData)
-	}
-
-	public async put(path?: string, putData?: object): Promise<any> {
-		return this.request('PUT', path)
-	}
-
-	public async delete(path?: string, deleteData?: object): Promise<any> {
-		return this.request('DELETE', path)
-	}
-
-	protected async request(
+	public async make(
 		method: string,
 		path?: string,
-		postData?: object,
+		data?: NexusData,
 	): Promise<NexusResponse> {
 		let requestURL: string = ''
 
@@ -56,6 +40,19 @@ export class Request {
 
 		const url = new URL(requestURL)
 
+		let postData: string | null = null
+
+		if (data?.data) {
+			if (this.options?.setURLEncoded || data?.setURLEncoded) {
+				const keys = Object.keys(data.data)
+				postData = keys
+					.map((key) => `${key}=${data.data[key]}`)
+					.join('&')
+			} else {
+				postData = JSON.stringify(data.data)
+			}
+		}
+
 		return new Promise((resolve, reject) => {
 			let client: any
 			let requestOptions: object = {}
@@ -65,6 +62,14 @@ export class Request {
 				requestOptions = {
 					':method': method,
 					':path': url.pathname,
+					'content-length': postData
+						? Buffer.byteLength(postData)
+						: 0,
+					'content-type': this.options?.setURLEncoded || data?.setURLEncoded
+						? 'application/x-www-form-urlencoded'
+						: 'application/json',
+					...this.options.headers,
+					...data?.headers,
 				}
 			} else {
 				if (url.protocol === 'https:') client = https
@@ -136,7 +141,7 @@ export class Request {
 				})
 			}
 
-			request.end()
+			request.end(postData)
 		})
 	}
 }

@@ -28,19 +28,19 @@ class Nexus {
 	}
 
 	public async get(path?: string, data?: object): Promise<any> {
-		return this._request('get', path, data)
+		return this._request('GET', path, data)
 	}
 
 	public async post(path?: string, data?: object): Promise<any> {
-		return this._request('post', path, data)
+		return this._request('POST', path, data)
 	}
 
 	public async put(path?: string, data?: object): Promise<any> {
-		return this._request('put', path, data)
+		return this._request('PUT', path, data)
 	}
 
 	public async delete(path?: string, data?: object): Promise<any> {
-		return this._request('delete', path, data)
+		return this._request('DELETE', path, data)
 	}
 
 	public addParam(key: string, value: string): Nexus {
@@ -66,15 +66,12 @@ class Nexus {
 		path?: string,
 		data?: object,
 	): Promise<NexusResponse> {
-		let response: string
-
 		try {
-			response = await this.request[method](path, data)
+			const response = await this.request.make(method, path, data)
+            return await this.response.build(response)
 		} catch (error) {
 			throw new ResponseException(error)
 		}
-
-		return await this.response.build(response)
 	}
 }
 

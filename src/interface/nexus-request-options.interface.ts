@@ -12,6 +12,7 @@ export interface NexusRequestOptions {
 	method?: string
 	headers?: NexusHeaders
 	baseURL?: string
+    setURLEncoded?: boolean
 	response?: NexusResponseOptions
 	encoding?:
 		| 'ascii'
