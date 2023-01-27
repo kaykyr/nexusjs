@@ -1,18 +1,16 @@
 import { NexusResponseOptions } from './'
 
-export interface NexusHeaders {
-	[key: string]: string
-}
-
 export interface NexusRequestOptions {
 	url?: string
 	path?: string
 	data?: object
 	http2?: boolean
+	proxy?: string
 	method?: string
-	headers?: NexusHeaders
+	params?: object
+	headers?: object
 	baseURL?: string
-    setURLEncoded?: boolean
+    fullURL?: string
 	response?: NexusResponseOptions
 	encoding?:
 		| 'ascii'
@@ -26,4 +24,5 @@ export interface NexusRequestOptions {
 		| 'latin1'
 		| 'binary'
 		| 'hex'
+	setURLEncoded?: boolean
 }

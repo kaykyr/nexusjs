@@ -1,6 +1,6 @@
-export class ResponseException extends Error {
+export class NexusResponseException extends Error {
 	constructor(message: string) {
 		super(message)
-		this.name = 'ResponseException'
+		this.name = 'NexusResponseException'
 	}
 }

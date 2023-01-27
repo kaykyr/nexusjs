@@ -2,12 +2,12 @@ import { NexusData } from './interface/nexus-data.interface'
 import { Request } from './request'
 import { Response } from './response'
 
-import { NexusHeaders, NexusRequestOptions, NexusResponse } from './interface'
-import { ResponseException } from './exception'
+import { NexusRequestOptions, NexusResponse } from './interface'
+import { NexusResponseException } from './exception'
 
-class Nexus {
+export class Nexus {
 	public options?: NexusRequestOptions
-	public headersData?: NexusHeaders
+	public headersData?: object
 	public paramsData?: object
 	public postData?: object
 
@@ -18,13 +18,6 @@ class Nexus {
 		this.options = options || { http2: false }
 		this.request = new Request(this.options)
 		this.response = new Response(this.options.response)
-
-		if (this?.options?.method) {
-			this.request[this.options.method](
-				this.options.url,
-				this.options?.data,
-			)
-		}
 
 		return this
 	}
@@ -77,30 +70,37 @@ class Nexus {
 		path?: string,
 		data?: NexusData,
 	): Promise<NexusResponse> {
-		try {
-			const response = await this.request.make(method, path, {
-				headers: {
-					...this.headersData,
-					...data?.headers,
-				},
-				params: {
-					...this.paramsData,
-					...data?.params,
-				},
-				data: {
-					...this.postData,
-					...data?.data,
-				},
-			})
-			return await this.response.build(response)
-		} catch (error) {
-			throw new ResponseException(error)
-		}
+        const response = await this.request.make(method, path, {
+            headers: {
+                ...this.headersData,
+                ...data?.headers,
+            },
+            params: {
+                ...this.paramsData,
+                ...data?.params,
+            },
+            data: {
+                ...this.postData,
+                ...data?.data,
+            },
+        })
+        return await this.response.build(response)
 	}
 }
 
-export default function nexus(options?: NexusRequestOptions): Nexus {
-	return new Nexus(options)
+export default async function nexus(
+	options?: NexusRequestOptions,
+): Promise<Nexus | NexusResponse> {
+	const nexusInstance = new Nexus(options)
+	if (options?.method) {
+		return nexusInstance[options.method.toLowerCase()](
+			options.path || options.url,
+			options.data,
+		)
+	}
+
+	return nexusInstance
 }
 
 export * from './interface'
+export * from './exception'

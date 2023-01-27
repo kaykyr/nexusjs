@@ -4,12 +4,12 @@ import https from 'node:https'
 import http2 from 'node:http2'
 import querystring, { ParsedUrlQueryInput } from 'node:querystring'
 
-import { NexusRequestOptions, NexusResponse, NexusData } from '../interface'
+import { NexusRequestOptions, NexusFullResponse, NexusData } from '../interface'
 import { InvalidArgumentException } from '../exception'
 
 export class Request {
 	protected version: string = '0.0.1'
-	public options?: NexusRequestOptions
+	public options: NexusRequestOptions
 
 	constructor(options?: NexusRequestOptions) {
 		this.options = options || {}
@@ -19,7 +19,7 @@ export class Request {
 		method: string,
 		path?: string,
 		data?: NexusData,
-	): Promise<NexusResponse> {
+	): Promise<NexusFullResponse> {
 		let requestURL: string = ''
 
 		try {
@@ -29,25 +29,29 @@ export class Request {
 				throw new InvalidArgumentException('URL must be a string')
 			if (!url) throw new InvalidArgumentException('No URL provided')
 			let baseURL = new URL(url)
+			console.log(baseURL)
 
-			requestURL = `${baseURL.protocol ? baseURL.protocol : 'https:'}//${
-				baseURL.host
-			}${baseURL.port && `:${baseURL.port}`}${
-				baseURL.pathname ? `/${baseURL.pathname}` : ''
+			requestURL = `${baseURL.host}${baseURL.port && `:${baseURL.port}`}${
+				baseURL.pathname ? baseURL.pathname : ''
 			}`
 
 			requestURL += path
 				? `/${path}${
-						data?.params &&
-						`?${querystring.stringify(
-							<ParsedUrlQueryInput>data.params,
-						)}`
+						data?.params && Object.keys(data.params).length > 0
+							? `?${querystring.stringify(
+									<ParsedUrlQueryInput>data.params,
+							  )}`
+							: ''
 				  }`
 				: ''
+			requestURL =
+				`${baseURL.protocol ? baseURL.protocol : 'https:'}//` +
+				requestURL?.replace(/\/\//g, '/')
 		} catch (error) {
 			throw new InvalidArgumentException('Invalid URL provided')
 		}
 
+		this.options.fullURL = requestURL
 		const url = new URL(requestURL)
 
 		let postData: string | null = null
@@ -57,6 +61,18 @@ export class Request {
 				postData = querystring.stringify(<ParsedUrlQueryInput>data.data)
 			} else {
 				postData = JSON.stringify(data.data)
+			}
+		}
+
+		let headers = {
+			...this.options?.headers,
+			...data?.headers,
+		}
+
+		//Remove undefined headers
+		for (const key in headers) {
+			if (headers[key] === undefined) {
+				delete headers[key]
 			}
 		}
 
@@ -71,8 +87,7 @@ export class Request {
 				'user-agent': `NexusJS/${
 					this.version
 				} (${os.type()} ${os.release()}; ${os.arch()})`,
-				...this.options?.headers,
-				...data?.headers,
+				...headers,
 			}
 
 			if (this.options?.http2) {
@@ -99,7 +114,8 @@ export class Request {
 
 			const request = client.request(requestOptions)
 
-			const response = {
+			const response: NexusFullResponse = {
+				request: this.options,
 				statusCode: 0,
 				headers: {},
 				data: '',

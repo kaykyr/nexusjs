@@ -1,3 +1,4 @@
+import { NexusRequestOptions } from './../interface/nexus-request-options.interface'
 import { Duplex } from 'stream'
 import JSONbigInt from 'json-bigint'
 
@@ -5,14 +6,22 @@ import { ZSTD } from './zstd'
 
 import { toCamelCase, toSnakeCase } from '../helpers'
 
-import { NexusResponse, NexusResponseOptions } from '../interface'
-import { InvalidArgumentException } from '../exception'
+import {
+	NexusFullResponse,
+	NexusResponse,
+	NexusResponseOptions,
+} from '../interface'
+import { InvalidArgumentException, NexusException } from '../exception'
 
 export class Response {
 	private readonly zstd: ZSTD = new ZSTD()
 	private readonly JSONbigInt = JSONbigInt({ storeAsString: true })
 
-	private readonly compressedEncondings: string[] = ['zstd', 'gzip', 'deflate']
+	private readonly compressedEncondings: string[] = [
+		'zstd',
+		'gzip',
+		'deflate',
+	]
 
 	private options?: NexusResponseOptions
 
@@ -38,24 +47,30 @@ export class Response {
 			)
 		}
 
-        if (this.options?.stringifyBigInt && !this.options?.transformJson) {
-            throw new InvalidArgumentException(
-                'You must enable transformJson option to use stringifyBigInt option.',
-            )
-        }
+		if (this.options?.stringifyBigInt && !this.options?.transformJson) {
+			throw new InvalidArgumentException(
+				'You must enable transformJson option to use stringifyBigInt option.',
+			)
+		}
 	}
 
-	async build(response: any): Promise<NexusResponse> {
+	async build(fullResponse: NexusFullResponse): Promise<NexusResponse> {
+		let response: NexusResponse
+
 		if (this.options?.responseTransformer) {
-			response = await this.options.responseTransformer(response)
+			response = await this.options.responseTransformer(fullResponse)
 		} else {
-			response = await this.transformer(response)
+			response = await this.transformer(fullResponse)
+		}
+
+		if (response.statusCode !== 200) {
+			throw new NexusException(fullResponse)
 		}
 
 		return response
 	}
 
-	async transformer(response: NexusResponse): Promise<NexusResponse> {
+	async transformer(response: NexusFullResponse): Promise<NexusResponse> {
 		let data: string | object = response.data
 
 		if (
@@ -72,20 +87,25 @@ export class Response {
 			}
 		}
 
-		if (this.options?.transformJson) {
+		if (
+			this.options?.transformJson &&
+			response.headers['content-type'].includes('application/json')
+		) {
 			if (this.options?.stringifyBigInt) {
 				data = this.JSONbigInt.parse(<string>data)
 			} else {
 				data = JSON.parse(<string>data)
 			}
-		}
 
-		if (this.options?.forceCamelCase) {
-			data = toCamelCase(data)
-		}
+			if (this.options?.forceCamelCase) {
+				data = toCamelCase(data)
+			}
 
-		if (this.options?.forceSnakeCase) {
-			data = toSnakeCase(data)
+			if (this.options?.forceSnakeCase) {
+				data = toSnakeCase(data)
+			}
+		} else {
+			data = response.data
 		}
 
 		return {
