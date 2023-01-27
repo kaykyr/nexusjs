@@ -1,4 +1,3 @@
-import { Stream } from 'stream'
 import ProcessStream from 'process-streams'
 import { execSync } from 'child_process'
 import through from 'through2'
@@ -37,12 +36,7 @@ export class ZSTD {
 		}
 	}
 
-	public async compress(
-		compressionLevel: number,
-		spawnOptions: object,
-		streamOptions: object,
-		zstdOptions: string[],
-	): Promise<Buffer> {
+	public compress(compressionLevel: number = 3) {
 		const processStream = new ProcessStream()
 
 		const allowedLevels = [
@@ -58,65 +52,35 @@ export class ZSTD {
 				'number between 1 and 22',
 			)
 
-		return new Promise((resolve, reject) => {
-			const compression = processStream
-				.spawn(
-					this.binPath,
-					[`-${compressionLevel}`, ...zstdOptions],
-					spawnOptions,
-					streamOptions,
-				)
-				.on('exit', (code, signal) => {
-					if (code !== 0) {
-						setTimeout(() => {
-							reject(
-								compression.destroy(
-									new ZSTDCompressionException(
-										`ZSTD exited with non zero code. Code: ${code} signal: ${signal}`,
-									),
-								),
-							)
-						}, 1)
-					}
-				})
+		const compressionProcess = processStream
+			.spawn(this.binPath, [`-${compressionLevel}`])
+			.on('exit', (code: number, signal: string) => {
+				if (code !== 0) {
+					setTimeout(() => {
+						compressionProcess.destroy(
+							new ZSTDCompressionException(
+								`ZSTD exited with non zero code. Code: ${code} signal: ${signal}`,
+							),
+						)
+					}, 1)
+				}
+			})
 
-			resolve(compression)
-		})
+		return compressionProcess
 	}
 
-	public async decompress(
-		spawnOptions: object,
-		streamOptions: object,
-		zstdOptions: string[],
-	): Promise<Buffer> {
+	public decompress() {
 		return peek(
 			{ newline: false, maxBuffer: 10 },
 			(data: Buffer, swap: Function) => {
-				if (isZst(data))
-					return swap(
-						null,
-						this._decompress(
-							spawnOptions,
-							streamOptions,
-							zstdOptions,
-						),
-					)
+				if (isZst(data)) return swap(null, this._decompress())
 				return swap(null, through())
 			},
 		)
 	}
 
-	protected _decompress(
-		spawnOptions: object,
-		streamOptions: object,
-		zstdOptions: string[],
-	): Stream {
-		const processStream = new ProcessStream()
-		return processStream.spawn(
-			this.binPath,
-			['-d', ...zstdOptions],
-			spawnOptions,
-			streamOptions,
-		)
+	protected _decompress() {
+		const decompressProcess = new ProcessStream()
+		return decompressProcess.spawn(this.binPath, ['-d'])
 	}
 }
