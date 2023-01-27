@@ -35,89 +35,50 @@ export class Request {
 	): Promise<NexusResponse> {
 		let requestURL: string = ''
 
-		if (this.options?.baseURL) {
-			try {
-				let baseURL = new URL(this.options?.baseURL)
-				requestURL = `${
-					baseURL.protocol ? baseURL.protocol : 'https:'
-				}//${baseURL.host}${baseURL.port && `:${baseURL.port}`}${
-					baseURL.pathname ? `/${baseURL.pathname}` : ''
-				}${path ? `/${path}` : ''}`
-			} catch (e) {
-				throw new InvalidArgumentException('Invalid URL provided')
-			}
-		} else if (path) {
-			try {
-				let baseURL = new URL(path)
-				requestURL = `${
-					baseURL.protocol ? baseURL.protocol : 'https:'
-				}//${baseURL.host}${baseURL.port && `:${baseURL.port}`}${
-					baseURL.pathname ? `/${baseURL.pathname}` : ''
-				}`
-			} catch (e) {
-				throw new InvalidArgumentException('Invalid URL provided')
-			}
-		} else {
-			throw new InvalidArgumentException('No URL provided')
+		try {
+			let url = this.options?.baseURL || path
+
+			if (typeof url !== 'string')
+				throw new InvalidArgumentException('URL must be a string')
+			if (!url) throw new InvalidArgumentException('No URL provided')
+			let baseURL = new URL(url)
+
+			requestURL = `${baseURL.protocol ? baseURL.protocol : 'https:'}//${
+				baseURL.host
+			}${baseURL.port && `:${baseURL.port}`}${
+				baseURL.pathname ? `/${baseURL.pathname}` : ''
+			}`
+
+			if (path) requestURL += `/${path}`
+		} catch (error) {
+			throw new InvalidArgumentException('Invalid URL provided')
 		}
 
 		const url = new URL(requestURL)
 
-		if (this.options?.http2) {
-			return new Promise((resolve, reject) => {
-				const client = http2.connect(url.origin)
-
-				const req = client.request({
-					':method': method,
-					':path': url.pathname,
-				})
-
-				req.setEncoding(this.options?.encoding || 'utf8')
-
-				let responseHeaders = {}
-
-				req.on('response', (headers: string[]) => {
-					for (const name in headers) {
-						responseHeaders[name] = headers[name]
-					}
-				})
-
-				let responseData: string = ''
-
-				req.on('data', (chunk: string) => {
-					responseData += chunk
-				})
-
-				req.on('end', () => {
-					client.close()
-
-					resolve({
-						statusCode: responseHeaders[':status'],
-						headers: responseHeaders,
-						data: responseData,
-					})
-				})
-
-				req.on('error', (error: any) => {
-					reject(error)
-				})
-
-				req.end()
-			})
-		}
-
 		return new Promise((resolve, reject) => {
 			let client: any
+			let requestOptions: object = {}
 
-			if (url.protocol === 'https:') client = https
-			else client = http
+			if (this.options?.http2) {
+				client = http2.connect(url.origin)
+				requestOptions = {
+					':method': method,
+					':path': url.pathname,
+				}
+			} else {
+				if (url.protocol === 'https:') client = https
+				else client = http
 
-			const request = client.request({
-				method,
-				hostname: url.hostname,
-				port: 443,
-				path: url.pathname,
-			})
+				requestOptions = {
+					method,
+					hostname: url.hostname,
+					port: url.port !== '' ? url.port : undefined,
+					path: url.pathname,
+				}
+			}
+
+			const request = client.request(requestOptions)
 
 			const response = {
 				statusCode: 0,
@@ -125,23 +86,55 @@ export class Request {
 				data: '',
 			}
 
-			request.on('response', (serverResponse: IncomingMessage) => {
-				response.statusCode = serverResponse.statusCode || 0
-				response.headers = serverResponse.headers
+			request.on(
+				'response',
+				(serverResponse: string[] | IncomingMessage) => {
+					if (this.options?.http2) {
+						serverResponse = <string[]>serverResponse
 
-				serverResponse.on('data', (chunk: string) => {
+						for (const name in serverResponse) {
+							response.headers[name] = serverResponse[name]
+						}
+					} else {
+						serverResponse = <IncomingMessage>serverResponse
+
+						response.statusCode = serverResponse.statusCode || 0
+						response.headers = serverResponse.headers
+
+						serverResponse.on('data', (chunk: string) => {
+							response.data += chunk
+						})
+
+						serverResponse.on('end', () => {
+							resolve(response)
+						})
+
+						serverResponse.on('error', (error: any) => {
+							reject(error)
+							client.close()
+							request.end()
+						})
+					}
+				},
+			)
+
+			if (this.options?.http2) {
+				request.setEncoding(this.options?.encoding || 'utf8')
+
+				request.on('data', (chunk: string) => {
 					response.data += chunk
 				})
 
-				serverResponse.on('end', () => {
+				request.on('end', () => {
+					client.close()
+					response.statusCode = response.headers[':status']
 					resolve(response)
 				})
 
-				serverResponse.on('error', (error: any) => {
+				request.on('error', (error: any) => {
 					reject(error)
-					request.end()
 				})
-			})
+			}
 
 			request.end()
 		})
