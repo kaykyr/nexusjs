@@ -1,0 +1,48 @@
+{
+    "name": "nexusjs",
+    "version": "1.0.0",
+    "description": "HTTP/HTTP2 client for NodeJS with ZSTD support.",
+    "main": "index.ts",
+    "author": "Kayky Ramos",
+    "license": "MIT",
+    "private": false,
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"files": [
+		"dist"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/kaykyr/nexusjs.git"
+	},
+	"scripts": {
+		"prepare": "npm run build",
+        "test": "tsx tests/index.ts",
+		"build": "tsup"
+	},
+    "tsup": {
+        "entry": ["src/index.ts"],
+        "splitting": false,
+        "sourcemap": true,
+        "clean": true
+    },
+	"dependencies": {
+		"json-bigint": "^1.0.0"
+	},
+	"devDependencies": {
+		"@types/json-bigint": "^1.0.1",
+		"@types/node": "^18.11.11",
+		"@typescript-eslint/eslint-plugin": "^4.23.0",
+		"@typescript-eslint/parser": "^4.23.0",
+		"eslint": "^8.24.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"nodemon": "^2.0.20",
+		"prettier": "^2.7.1",
+		"pretty-quick": "^3.1.3",
+		"tsup": "^6.5.0",
+		"tsx": "^3.12.2",
+		"typescript": "^4.9.3"
+	}
+}
