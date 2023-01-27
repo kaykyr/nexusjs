@@ -1,11 +1,13 @@
+import { NexusData } from './interface/nexus-data.interface'
 import { Request } from './request'
 import { Response } from './response'
 
-import { NexusRequestOptions, NexusResponse } from './interface'
+import { NexusHeaders, NexusRequestOptions, NexusResponse } from './interface'
 import { ResponseException } from './exception'
 
 class Nexus {
 	public options?: NexusRequestOptions
+	public headersData?: NexusHeaders
 	public paramsData?: object
 	public postData?: object
 
@@ -43,6 +45,15 @@ class Nexus {
 		return this._request('DELETE', path, data)
 	}
 
+	public addHeader(key: string, value: string): Nexus {
+		this.headersData = {
+			...this.headersData,
+			[key]: value,
+		}
+
+		return this
+	}
+
 	public addParam(key: string, value: string): Nexus {
 		this.paramsData = {
 			...this.paramsData,
@@ -64,11 +75,24 @@ class Nexus {
 	protected async _request(
 		method: string,
 		path?: string,
-		data?: object,
+		data?: NexusData,
 	): Promise<NexusResponse> {
 		try {
-			const response = await this.request.make(method, path, data)
-            return await this.response.build(response)
+			const response = await this.request.make(method, path, {
+				headers: {
+					...this.headersData,
+					...data?.headers,
+				},
+				params: {
+					...this.paramsData,
+					...data?.params,
+				},
+				data: {
+					...this.postData,
+					...data?.data,
+				},
+			})
+			return await this.response.build(response)
 		} catch (error) {
 			throw new ResponseException(error)
 		}

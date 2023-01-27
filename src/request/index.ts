@@ -1,11 +1,14 @@
+import os from 'node:os'
 import http, { IncomingMessage } from 'node:http'
 import https from 'node:https'
 import http2 from 'node:http2'
+import querystring, { ParsedUrlQueryInput } from 'node:querystring'
 
 import { NexusRequestOptions, NexusResponse, NexusData } from '../interface'
 import { InvalidArgumentException } from '../exception'
 
 export class Request {
+	protected version: string = '0.0.1'
 	public options?: NexusRequestOptions
 
 	constructor(options?: NexusRequestOptions) {
@@ -33,7 +36,14 @@ export class Request {
 				baseURL.pathname ? `/${baseURL.pathname}` : ''
 			}`
 
-			if (path) requestURL += `/${path}`
+			requestURL += path
+				? `/${path}${
+						data?.params &&
+						`?${querystring.stringify(
+							<ParsedUrlQueryInput>data.params,
+						)}`
+				  }`
+				: ''
 		} catch (error) {
 			throw new InvalidArgumentException('Invalid URL provided')
 		}
@@ -44,10 +54,7 @@ export class Request {
 
 		if (data?.data) {
 			if (this.options?.setURLEncoded || data?.setURLEncoded) {
-				const keys = Object.keys(data.data)
-				postData = keys
-					.map((key) => `${key}=${data.data[key]}`)
-					.join('&')
+				postData = querystring.stringify(<ParsedUrlQueryInput>data.data)
 			} else {
 				postData = JSON.stringify(data.data)
 			}
@@ -55,21 +62,25 @@ export class Request {
 
 		return new Promise((resolve, reject) => {
 			let client: any
-			let requestOptions: object = {}
+			let requestOptions: object = {
+				'content-length': postData ? Buffer.byteLength(postData) : 0,
+				'content-type':
+					this.options?.setURLEncoded || data?.setURLEncoded
+						? 'application/x-www-form-urlencoded'
+						: 'application/json',
+				'user-agent': `NexusJS/${
+					this.version
+				} (${os.type()} ${os.release()}; ${os.arch()})`,
+				...this.options?.headers,
+				...data?.headers,
+			}
 
 			if (this.options?.http2) {
 				client = http2.connect(url.origin)
 				requestOptions = {
 					':method': method,
-					':path': url.pathname,
-					'content-length': postData
-						? Buffer.byteLength(postData)
-						: 0,
-					'content-type': this.options?.setURLEncoded || data?.setURLEncoded
-						? 'application/x-www-form-urlencoded'
-						: 'application/json',
-					...this.options.headers,
-					...data?.headers,
+					':path': url.pathname + url.search,
+					...requestOptions,
 				}
 			} else {
 				if (url.protocol === 'https:') client = https
@@ -79,7 +90,10 @@ export class Request {
 					method,
 					hostname: url.hostname,
 					port: url.port !== '' ? url.port : undefined,
-					path: url.pathname,
+					path: url.pathname + url.search,
+					headers: {
+						...requestOptions,
+					},
 				}
 			}
 
