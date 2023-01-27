@@ -87,6 +87,10 @@ export class Nexus {
 	}
 
 	public rawRequest(url: string, options: NexusRequestOptions): Promise<NexusResponse> {
+        delete options.url
+        delete options.path
+        delete options.baseURL
+
 		return this._request(
 			<string>options.method!.toUpperCase(),
 			url,
