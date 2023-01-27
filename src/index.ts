@@ -64,15 +64,6 @@ export class Nexus {
 		return this
 	}
 
-	public async getResponse(): Promise<NexusResponse> {
-		return <NexusResponse>(
-			this[this.options!.method!.toLowerCase()](
-				this.options?.path || this.options?.url,
-				this.options!.data,
-			)
-		)
-	}
-
 	protected async _request(
 		method: string,
 		path?: string,
@@ -94,10 +85,22 @@ export class Nexus {
 		})
 		return await this.response.build(response)
 	}
+
+	public rawRequest(url: string, options: NexusRequestOptions): Promise<NexusResponse> {
+		return this._request(
+			<string>options.method!.toUpperCase(),
+			url,
+			options.data,
+		)
+	}
 }
 
-export default function nexus(options?: NexusRequestOptions): Nexus {
-	return new Nexus(options)
+export default async function nexus(
+    url: string,
+	options: NexusRequestOptions,
+): Promise<NexusResponse> {
+	const nexus = new Nexus(options)
+	return nexus.rawRequest(url, options)
 }
 
 export * from './interface'

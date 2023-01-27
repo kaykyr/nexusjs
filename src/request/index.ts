@@ -2,7 +2,6 @@ import querystring, { ParsedUrlQueryInput } from 'node:querystring'
 import http, { IncomingMessage } from 'node:http'
 import https from 'node:https'
 import http2 from 'node:http2'
-import tls from 'node:tls'
 import os from 'node:os'
 
 import { Proxy } from './proxy'
@@ -10,7 +9,7 @@ import { Proxy } from './proxy'
 import { keysToLower } from '../helpers'
 
 import { NexusRequestOptions, NexusFullResponse, NexusData } from '../interface'
-import { InvalidArgumentException, ProxyException } from '../exception'
+import { InvalidArgumentException } from '../exception'
 import { Socket } from 'node:net'
 
 export class Request {
@@ -29,7 +28,7 @@ export class Request {
 		let requestURL: string = ''
 
 		try {
-			let url = this.options?.baseURL || path
+			let url = this.options?.baseURL || this.options?.url || path
 
 			if (typeof url !== 'string')
 				throw new InvalidArgumentException('URL must be a string')
@@ -40,21 +39,26 @@ export class Request {
 				baseURL.pathname ? baseURL.pathname : ''
 			}`
 
-			requestURL += path
-				? `/${path}${
-						data?.params && Object.keys(data.params).length > 0
-							? `?${querystring.stringify(
-									<ParsedUrlQueryInput>data.params,
-							  )}`
-							: ''
-				  }`
-				: ''
+			if (this.options?.baseURL || this.options?.url) {
+				requestURL += path
+					? `/${path}${
+							data?.params && Object.keys(data.params).length > 0
+								? `?${querystring.stringify(
+										<ParsedUrlQueryInput>data.params,
+								  )}`
+								: ''
+					  }`
+					: ''
+			}
+
 			requestURL =
 				`${baseURL.protocol ? baseURL.protocol : 'https:'}//` +
 				requestURL?.replace(/\/\//g, '/')
 		} catch (error) {
 			throw new InvalidArgumentException('Invalid URL provided')
 		}
+
+		console.log(requestURL)
 
 		this.options.fullURL = requestURL
 		const url = new URL(requestURL)
@@ -80,19 +84,16 @@ export class Request {
 			}
 		}
 
-        let socket: Socket | undefined = undefined
+		let socket: Socket | undefined = undefined
 
 		if (this.options?.proxy) {
 			if (typeof this.options.proxy !== 'string') {
 				throw new InvalidArgumentException('Proxy must be a string')
 			}
 
-			const proxy = new Proxy(
-                new URL(this.options.proxy),
-                url
-            )
+			const proxy = new Proxy(new URL(this.options.proxy), url)
 
-            socket = await proxy.connect()
+			socket = await proxy.connect()
 		}
 
 		return new Promise((resolve, reject) => {
@@ -110,11 +111,16 @@ export class Request {
 			}
 
 			if (this.options?.http2) {
-				client = http2.connect(url.origin, socket ? {
-                    host: url.hostname,
-                    socket,
-                    ALPNProtocols: socket ? ['h2'] : undefined,
-                } : undefined)
+				client = http2.connect(
+					url.origin,
+					socket
+						? {
+								host: url.hostname,
+								socket,
+								ALPNProtocols: socket ? ['h2'] : undefined,
+						  }
+						: undefined,
+				)
 
 				requestOptions = {
 					':method': method,
@@ -130,7 +136,7 @@ export class Request {
 					hostname: url.hostname,
 					port: url.port !== '' ? url.port : undefined,
 					path: url.pathname + url.search,
-                    socket,
+					socket,
 					headers: {
 						...requestOptions,
 					},
