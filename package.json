@@ -1,6 +1,6 @@
 {
 	"name": "nexusjs",
-	"version": "1.0.0",
+	"version": "0.0.1",
 	"description": "HTTP/HTTP2 client for NodeJS with ZSTD support.",
 	"main": "index.ts",
 	"author": "Kayky Ramos",
