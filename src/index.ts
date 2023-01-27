@@ -5,7 +5,7 @@ import { Response } from './response'
 import { NexusRequestOptions, NexusResponse } from './interface'
 
 export class Nexus {
-	public options?: NexusRequestOptions
+	public options: NexusRequestOptions
 	public headersData?: object
 	public paramsData?: object
 	public postData?: object
@@ -64,6 +64,15 @@ export class Nexus {
 		return this
 	}
 
+	public async getResponse(): Promise<NexusResponse> {
+		return <NexusResponse>(
+			this[this.options!.method!.toLowerCase()](
+				this.options?.path || this.options?.url,
+				this.options!.data,
+			)
+		)
+	}
+
 	protected async _request(
 		method: string,
 		path?: string,
@@ -88,15 +97,7 @@ export class Nexus {
 }
 
 export default function nexus(options?: NexusRequestOptions): Nexus {
-	const nexusInstance = new Nexus(options)
-	if (options?.method) {
-		return nexusInstance[options.method.toLowerCase()](
-			options.path || options.url,
-			options.data,
-		)
-	}
-
-	return nexusInstance
+	return new Nexus(options)
 }
 
 export * from './interface'

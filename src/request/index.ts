@@ -1,11 +1,17 @@
-import os from 'node:os'
+import querystring, { ParsedUrlQueryInput } from 'node:querystring'
 import http, { IncomingMessage } from 'node:http'
 import https from 'node:https'
 import http2 from 'node:http2'
-import querystring, { ParsedUrlQueryInput } from 'node:querystring'
+import tls from 'node:tls'
+import os from 'node:os'
+
+import { Proxy } from './proxy'
+
+import { keysToLower } from '../helpers'
 
 import { NexusRequestOptions, NexusFullResponse, NexusData } from '../interface'
-import { InvalidArgumentException } from '../exception'
+import { InvalidArgumentException, ProxyException } from '../exception'
+import { Socket } from 'node:net'
 
 export class Request {
 	protected version: string = '1.0.0'
@@ -64,15 +70,29 @@ export class Request {
 		}
 
 		let headers = {
-			...this.options?.headers,
-			...data?.headers,
+			...keysToLower(this.options?.headers),
+			...keysToLower(data?.headers),
 		}
 
-		//Remove undefined headers
 		for (const key in headers) {
 			if (headers[key] === undefined) {
 				delete headers[key]
 			}
+		}
+
+        let socket: Socket | undefined = undefined
+
+		if (this.options?.proxy) {
+			if (typeof this.options.proxy !== 'string') {
+				throw new InvalidArgumentException('Proxy must be a string')
+			}
+
+			const proxy = new Proxy(
+                new URL(this.options.proxy),
+                url
+            )
+
+            socket = await proxy.connect()
 		}
 
 		return new Promise((resolve, reject) => {
@@ -90,7 +110,12 @@ export class Request {
 			}
 
 			if (this.options?.http2) {
-				client = http2.connect(url.origin)
+				client = http2.connect(url.origin, socket ? {
+                    host: url.hostname,
+                    socket,
+                    ALPNProtocols: socket ? ['h2'] : undefined,
+                } : undefined)
+
 				requestOptions = {
 					':method': method,
 					':path': url.pathname + url.search,
@@ -105,6 +130,7 @@ export class Request {
 					hostname: url.hostname,
 					port: url.port !== '' ? url.port : undefined,
 					path: url.pathname + url.search,
+                    socket,
 					headers: {
 						...requestOptions,
 					},

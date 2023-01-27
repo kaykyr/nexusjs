@@ -1,9 +1,12 @@
 import nexus from '../src/'
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
 async function routine() {
 	const api = nexus({
-		http2: true,
+		http2: false,
 		baseURL: 'https://httpbin.org/',
+        proxy: 'http://127.0.0.1:8080',
 		setURLEncoded: false,
 		response: {
 			transformJson: true,
