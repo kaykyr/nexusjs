@@ -4,12 +4,12 @@ import { NexusRequestOptions } from './interface'
 
 class Nexus {
 	public options?: NexusRequestOptions
-    public paramsData?: object
-    public postData?: object
+	public paramsData?: object
+	public postData?: object
 	private request: Request
 
 	constructor(options?: NexusRequestOptions) {
-		this.options = options || {}
+		this.options = options || { http2: false }
 		this.request = new Request(this.options)
 
 		if (this?.options?.method) {
@@ -38,23 +38,23 @@ class Nexus {
 		return this.request.delete(path, deleteData)
 	}
 
-    addParam(key: string, value: string): Nexus {
-        this.paramsData = {
-            ...this.paramsData,
-            [key]: value
-        }
+	addParam(key: string, value: string): Nexus {
+		this.paramsData = {
+			...this.paramsData,
+			[key]: value,
+		}
 
-        return this
-    }
+		return this
+	}
 
-    addPost(key: string, value: string): Nexus {
-        this.postData = {
-            ...this.postData,
-            [key]: value
-        }
+	addPost(key: string, value: string): Nexus {
+		this.postData = {
+			...this.postData,
+			[key]: value,
+		}
 
-        return this
-    }
+		return this
+	}
 }
 
 export default function nexus(options?: NexusRequestOptions): Nexus {

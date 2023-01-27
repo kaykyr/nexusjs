@@ -3,6 +3,7 @@ export interface NexusHeaders {
 }
 
 export interface NexusRequestOptions {
+	http2?: boolean
 	method?: string
 	headers?: NexusHeaders
 	baseURL?: string
