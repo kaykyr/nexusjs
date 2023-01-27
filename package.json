@@ -18,7 +18,7 @@
 	},
 	"scripts": {
 		"prepare": "npm run build",
-		"test": "tsx tests/index.ts",
+		"test": "tsx watch tests/index.ts",
 		"build": "tsup"
 	},
 	"tsup": {

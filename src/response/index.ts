@@ -9,19 +9,18 @@ import { NexusResponse, NexusResponseOptions } from '../interface'
 import { InvalidArgumentException } from '../exception'
 
 export class Response {
-	protected zstd: ZSTD = new ZSTD()
-	protected JSONbigInt = JSONbigInt({ storeAsString: true })
+	private readonly zstd: ZSTD = new ZSTD()
+	private readonly JSONbigInt = JSONbigInt({ storeAsString: true })
 
-	protected compressedEncondings: string[] = ['zstd', 'gzip', 'deflate']
+	private readonly compressedEncondings: string[] = ['zstd', 'gzip', 'deflate']
 
-	public options?: NexusResponseOptions
+	private options?: NexusResponseOptions
 
 	constructor(options?: NexusResponseOptions) {
 		this.options = options || {
 			decompress: true,
 			transformJson: true,
 			stringifyBigInt: true,
-			responseTransformer: this.transformer,
 		}
 
 		if (
@@ -38,18 +37,25 @@ export class Response {
 				"You can't use forceCamelCase and forceSnakeCase options together.",
 			)
 		}
+
+        if (this.options?.stringifyBigInt && !this.options?.transformJson) {
+            throw new InvalidArgumentException(
+                'You must enable transformJson option to use stringifyBigInt option.',
+            )
+        }
 	}
 
 	async build(response: any): Promise<NexusResponse> {
-		return {
-			headers: response.headers,
-			data: response.data,
+		if (this.options?.responseTransformer) {
+			response = await this.options.responseTransformer(response)
+		} else {
+			response = await this.transformer(response)
 		}
+
+		return response
 	}
 
-	async transformer(
-		response: NexusResponse,
-	): Promise<string | object | Buffer> {
+	async transformer(response: NexusResponse): Promise<NexusResponse> {
 		let data: string | object = response.data
 
 		if (
@@ -82,7 +88,10 @@ export class Response {
 			data = toSnakeCase(data)
 		}
 
-		return data
+		return {
+			...response,
+			data,
+		}
 	}
 
 	async zstdDecompress(data: Buffer): Promise<string> {

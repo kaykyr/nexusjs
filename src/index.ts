@@ -1,16 +1,21 @@
 import { Request } from './request'
+import { Response } from './response'
 
-import { NexusRequestOptions } from './interface'
+import { NexusRequestOptions, NexusResponse } from './interface'
+import { ResponseException } from './exception'
 
 class Nexus {
 	public options?: NexusRequestOptions
 	public paramsData?: object
 	public postData?: object
+
 	private request: Request
+	private response: Response
 
 	constructor(options?: NexusRequestOptions) {
 		this.options = options || { http2: false }
 		this.request = new Request(this.options)
+		this.response = new Response(this.options.response)
 
 		if (this?.options?.method) {
 			this.request[this.options.method](
@@ -22,23 +27,23 @@ class Nexus {
 		return this
 	}
 
-	async get(path?: string, getParams?: object): Promise<any> {
-		return this.request.get(path, getParams)
+	public async get(path?: string, data?: object): Promise<any> {
+		return this._request('get', path, data)
 	}
 
-	async post(path?: string, postData?: object): Promise<any> {
-		return this.request.post(path, postData)
+	public async post(path?: string, data?: object): Promise<any> {
+		return this._request('post', path, data)
 	}
 
-	async put(path?: string, putData?: object): Promise<any> {
-		return this.request.put(path, putData)
+	public async put(path?: string, data?: object): Promise<any> {
+		return this._request('put', path, data)
 	}
 
-	async delete(path?: string, deleteData?: object): Promise<any> {
-		return this.request.delete(path, deleteData)
+	public async delete(path?: string, data?: object): Promise<any> {
+		return this._request('delete', path, data)
 	}
 
-	addParam(key: string, value: string): Nexus {
+	public addParam(key: string, value: string): Nexus {
 		this.paramsData = {
 			...this.paramsData,
 			[key]: value,
@@ -47,13 +52,29 @@ class Nexus {
 		return this
 	}
 
-	addPost(key: string, value: string): Nexus {
+	public addPost(key: string, value: string): Nexus {
 		this.postData = {
 			...this.postData,
 			[key]: value,
 		}
 
 		return this
+	}
+
+	protected async _request(
+		method: string,
+		path?: string,
+		data?: object,
+	): Promise<NexusResponse> {
+		let response: string
+
+		try {
+			response = await this.request[method](path, data)
+		} catch (error) {
+			throw new ResponseException(error)
+		}
+
+		return await this.response.build(response)
 	}
 }
 

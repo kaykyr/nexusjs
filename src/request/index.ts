@@ -1,8 +1,8 @@
-import http from 'http'
-import https from 'https'
-import http2 from 'http2'
+import http, { IncomingMessage } from 'node:http'
+import https from 'node:https'
+import http2 from 'node:http2'
 
-import { NexusRequestOptions } from '../interface'
+import { NexusRequestOptions, NexusResponse } from '../interface'
 import { InvalidArgumentException } from '../exception'
 
 export class Request {
@@ -12,27 +12,27 @@ export class Request {
 		this.options = options || {}
 	}
 
-	async get(path?: string, getParams?: object): Promise<any> {
+	public async get(path?: string, getParams?: object): Promise<any> {
 		return this.request('GET', path)
 	}
 
-	async post(path?: string, postData?: object): Promise<any> {
+	public async post(path?: string, postData?: object): Promise<any> {
 		return this.request('POST', path, postData)
 	}
 
-	async put(path?: string, putData?: object): Promise<any> {
+	public async put(path?: string, putData?: object): Promise<any> {
 		return this.request('PUT', path)
 	}
 
-	async delete(path?: string, deleteData?: object): Promise<any> {
+	public async delete(path?: string, deleteData?: object): Promise<any> {
 		return this.request('DELETE', path)
 	}
 
-	async request(
+	protected async request(
 		method: string,
 		path?: string,
 		postData?: object,
-	): Promise<any> {
+	): Promise<NexusResponse> {
 		let requestURL: string = ''
 
 		if (this.options?.baseURL) {
@@ -64,48 +64,86 @@ export class Request {
 		const url = new URL(requestURL)
 
 		if (this.options?.http2) {
-			const client = http2.connect(url.origin)
-			const req = client.request({
-				':method': method,
-				':path': url.pathname,
+			return new Promise((resolve, reject) => {
+				const client = http2.connect(url.origin)
+
+				const req = client.request({
+					':method': method,
+					':path': url.pathname,
+				})
+
+				req.setEncoding(this.options?.encoding || 'utf8')
+
+				let responseHeaders = {}
+
+				req.on('response', (headers: string[]) => {
+					for (const name in headers) {
+						responseHeaders[name] = headers[name]
+					}
+				})
+
+				let responseData: string = ''
+
+				req.on('data', (chunk: string) => {
+					responseData += chunk
+				})
+
+				req.on('end', () => {
+					client.close()
+
+					resolve({
+						statusCode: responseHeaders[':status'],
+						headers: responseHeaders,
+						data: responseData,
+					})
+				})
+
+				req.on('error', (error: any) => {
+					reject(error)
+				})
+
+				req.end()
 			})
-			req.setEncoding('utf8')
-			req.on('response', (headers, flags) => {
-				for (const name in headers) {
-					console.log(`${name}: ${headers[name]}`)
-				}
-			})
-			let data = ''
-			req.on('data', (chunk) => {
-				data += chunk
-			})
-			req.on('end', () => {
-				client.close()
-			})
-			req.end()
-		} else {
+		}
+
+		return new Promise((resolve, reject) => {
 			let client: any
 
-			if (url.protocol === 'https:') {
-				client = https.request(url, {
-					method: method,
-				})
-			} else if (url.protocol === 'http:') {
-				client = http.request(url, {
-					method: method,
-				})
+			if (url.protocol === 'https:') client = https
+			else client = http
+
+			const request = client.request({
+				method,
+				hostname: url.hostname,
+				port: 443,
+				path: url.pathname,
+			})
+
+			const response = {
+				statusCode: 0,
+				headers: {},
+				data: '',
 			}
 
-			let data = ''
+			request.on('response', (serverResponse: IncomingMessage) => {
+				response.statusCode = serverResponse.statusCode || 0
+				response.headers = serverResponse.headers
 
-			client.on('data', (chunk) => {
-				console.log(chunk)
-				data += chunk
+				serverResponse.on('data', (chunk: string) => {
+					response.data += chunk
+				})
+
+				serverResponse.on('end', () => {
+					resolve(response)
+				})
+
+				serverResponse.on('error', (error: any) => {
+					reject(error)
+					request.end()
+				})
 			})
-			client.on('end', (data) => {
-				console.log(data)
-			})
-			client.end()
-		}
+
+			request.end()
+		})
 	}
 }
