@@ -1,8 +1,6 @@
 import { Duplex } from 'stream'
 import JSONbigInt from 'json-bigint'
 
-import { ZSTD } from './zstd'
-
 import { toCamelCase, toSnakeCase } from '../helpers'
 
 import {
@@ -12,8 +10,10 @@ import {
 } from '../interface'
 import { InvalidArgumentException, NexusException } from '../exception'
 
+import { ZSTD } from './zstd'
+
 export class Response {
-	private readonly zstd: ZSTD = new ZSTD()
+    protected zstd: ZSTD = new ZSTD()
 	private readonly JSONbigInt = JSONbigInt({ storeAsString: true })
 
 	private readonly compressedEncondings: string[] = [

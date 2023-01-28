@@ -94,7 +94,7 @@ export class Nexus {
 		return this._request(
 			<string>options.method!.toUpperCase(),
 			url,
-			options.data,
+			{ data: options.data },
 		)
 	}
 }

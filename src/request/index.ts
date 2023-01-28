@@ -58,14 +58,12 @@ export class Request {
 			throw new InvalidArgumentException('Invalid URL provided')
 		}
 
-		console.log(requestURL)
-
 		this.options.fullURL = requestURL
 		const url = new URL(requestURL)
 
 		let postData: string | null = null
 
-		if (data?.data) {
+		if (data?.data && Object.keys(data.data).length > 0) {
 			if (this.options?.setURLEncoded || data?.setURLEncoded) {
 				postData = querystring.stringify(<ParsedUrlQueryInput>data.data)
 			} else {
@@ -143,7 +141,7 @@ export class Request {
 				}
 			}
 
-			const request = client.request(requestOptions)
+			const request = client.request(requestOptions).end(postData)
 
 			const response: NexusFullResponse = {
 				request: this.options,
@@ -185,24 +183,23 @@ export class Request {
 			)
 
 			if (this.options?.http2) {
-				request.setEncoding(this.options?.encoding || 'utf8')
+				const buffer: Buffer[] = []
 
-				request.on('data', (chunk: string) => {
-					response.data += chunk
-				})
+				request
+					.on('data', (chunk: Buffer) => {
+						buffer.push(chunk)
+						response.data += Buffer.from(chunk)
+					})
+					.on('end', () => {
+						client.close()
+						response.statusCode = response.headers[':status']
 
-				request.on('end', () => {
-					client.close()
-					response.statusCode = response.headers[':status']
-					resolve(response)
-				})
-
-				request.on('error', (error: any) => {
-					reject(error)
-				})
+						resolve({ ...response, data: Buffer.concat(buffer) })
+					})
+					.on('error', (error: any) => {
+						reject(error)
+					})
 			}
-
-			request.end(postData)
 		})
 	}
 }
