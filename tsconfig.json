@@ -1,28 +1,26 @@
 {
     "compilerOptions": {
-        "allowJs": true,
-        "declarationMap": true,
-        "noImplicitAny": false,
-        "removeComments": true,
-        "experimentalDecorators": true,
+        "target": "es5",
         "module": "commonjs",
-        "target": "ES2022",
+        "lib": [
+            "esnext"
+        ],
         "sourceMap": true,
-        "outDir": "dist",
-        "rootDir": "src",
-        "declaration": true,
+        "outDir": "./dist",
+        "downlevelIteration": true,
+        "strict": true,
+        "noImplicitAny": false,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
         "noImplicitThis": true,
         "alwaysStrict": true,
-        "strictBindCallApply": true,
-        "strictNullChecks": true,
-        "strictFunctionTypes": true,
+        "noUnusedLocals": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true
     },
     "exclude": [
         "node_modules",
-        "dist"
-    ],
-    "include": [
-        "src"
+        "test"
     ]
 }
