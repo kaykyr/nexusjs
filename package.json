@@ -2,7 +2,8 @@
 	"name": "nexusjs",
 	"version": "1.0.0",
 	"description": "HTTP/HTTP2 client for NodeJS with ZSTD support.",
-	"main": "index.ts",
+	"main": "./dist/index.ts",
+    "types": "./dist/index.d.ts",
 	"author": "Kayky Ramos",
 	"license": "MIT",
 	"private": false,
@@ -12,6 +13,7 @@
 	"files": [
 		"dist"
 	],
+    "type": "module",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/kaykyr/nexusjs.git"
@@ -23,11 +25,22 @@
 	},
 	"tsup": {
 		"entry": [
-			"src/index.ts"
+            "src/**/*"
 		],
-		"splitting": false,
-		"sourcemap": true,
-		"clean": true
+        "format": ["esm"],
+        "splitting": false,
+        "sourcemap": true,
+        "clean": true,
+        "dts": true,
+        "external": [
+            "is-zst",
+            "json-bigint",
+            "peek-stream",
+            "process-streams",
+            "through2"
+        ],
+        "minify": false,
+        "bundle": true
 	},
 	"dependencies": {
 		"is-zst": "^1.0.0",

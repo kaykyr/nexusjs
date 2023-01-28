@@ -1,8 +1,6 @@
-import { NexusHeaders } from './'
-
 export interface NexusData {
     setURLEncoded?: boolean
-	headers?: NexusHeaders
+	headers?: object
     params?: object
 	data?: object
 }
