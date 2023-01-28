@@ -13,7 +13,7 @@ export class NexusException extends Error {
 		)
 		this.name = 'NexusException'
 
-        if (response.headers['content-type'] === 'application/json') {
+        if (response.headers['content-type'].includes('application/json')) {
             this.data = JSON.parse(response.data)
         } else {
             this.data = response.data
