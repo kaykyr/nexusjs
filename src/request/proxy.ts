@@ -38,10 +38,22 @@ export class Proxy {
 
 	public async connect(): Promise<Socket> {
 		return new Promise((resolve, reject) => {
-			const network = this.authority.protocol === 'https:' ? https : http
+			const network = this.proxy.protocol === 'https:' ? https : http
 			const connectPath = `${this.authority.hostname}${
 				this.authority.protocol === 'https:' ? ':443' : ':80'
 			}`
+
+            console.log({
+                method: 'CONNECT',
+                rejectUnauthorized: false,
+                hostname: this.proxy.hostname,
+                port: this.proxy.port,
+                path: connectPath,
+                headers: {
+                    ...this.getAuthorizationHeaders(),
+                    host: connectPath,
+                },
+            })
 
 			const tunnel = network
 				.request({
