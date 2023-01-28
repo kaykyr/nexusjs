@@ -13,7 +13,7 @@ import { InvalidArgumentException } from '../exception'
 import { Socket } from 'node:net'
 
 export class Request {
-	protected version: string = '1.0.0'
+	protected version: string = '1.1.1'
 	public options: NexusRequestOptions
 
 	constructor(options?: NexusRequestOptions) {
@@ -89,9 +89,13 @@ export class Request {
 				throw new InvalidArgumentException('Proxy must be a string')
 			}
 
-			const proxy = new Proxy(new URL(this.options.proxy), url)
+            try {
+                const proxy = new Proxy(new URL(this.options.proxy), url)
 
-			socket = await proxy.connect()
+                socket = await proxy.connect()
+            } catch (error) {
+                throw error
+            }
 		}
 
 		return new Promise((resolve, reject) => {

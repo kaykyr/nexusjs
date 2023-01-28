@@ -69,21 +69,25 @@ export class Nexus {
 		path?: string,
 		data?: NexusData,
 	): Promise<NexusResponse> {
-		const response = await this.request.make(method, path, {
-			headers: {
-				...this.headersData,
-				...data?.headers,
-			},
-			params: {
-				...this.paramsData,
-				...data?.params,
-			},
-			data: {
-				...this.postData,
-				...data?.data,
-			},
-		})
-		return await this.response.build(response)
+        try {
+            const response = await this.request.make(method, path, {
+                headers: {
+                    ...this.headersData,
+                    ...data?.headers,
+                },
+                params: {
+                    ...this.paramsData,
+                    ...data?.params,
+                },
+                data: {
+                    ...this.postData,
+                    ...data?.data,
+                },
+            })
+            return await this.response.build(response)
+        } catch (error) {
+            throw error
+        }
 	}
 
 	public rawRequest(url: string, options: NexusRequestOptions): Promise<NexusResponse> {
