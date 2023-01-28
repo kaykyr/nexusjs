@@ -4,7 +4,7 @@
     </b>
 </h1>
 
-<p align="center">Promise based HTTP/1.1 HTTP/2.0 client with ZSTD support for NodeJS. Like nexus (only for server-side). I've created it for my personal usage in a specific project so, I decided to share code with the community. I hope this can help anyone.</p>
+<p align="center">Promise based HTTP/1.1 HTTP/2.0 client with ZSTD support for NodeJS (only for server-side). I've created it for my personal usage in a specific project so, I decided to share code with the community. I hope this can help anyone.</p>
 
 <div align="center">
 
