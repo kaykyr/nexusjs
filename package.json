@@ -21,7 +21,8 @@
 	"scripts": {
 		"prepare": "npm run build",
 		"test": "tsx watch tests/index.ts",
-		"build": "tsup"
+		"build": "tsup",
+        "release": "yarn publish --access public"
 	},
 	"tsup": {
 		"entry": [
