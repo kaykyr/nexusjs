@@ -16,9 +16,6 @@
 [![gitter chat](https://img.shields.io/gitter/room/mzabriskie/nexus-request.svg?style=flat-square)](https://gitter.im/mzabriskie/nexus-request)
 [![Known Vulnerabilities](https://snyk.io/test/npm/nexus-request/badge.svg)](https://snyk.io/test/npm/nexus-request)
 
-
-
-
 </div>
 
 ## Features
@@ -26,6 +23,7 @@
 - Make [http](https://nodejs.org/api/http.html) and [http2](https://nodejs.org/api/http2.html) requests from node.js
 - Supports the [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) API
 - Intercept response
+- Decompress ZSTD response
 - Transform request and response data
 - Automatic transforms for [JSON](https://www.json.org/json-en.html) data
 
@@ -39,13 +37,11 @@ Using npm:
 $ npm install nexus-request
 ```
 
-
 Using yarn:
 
 ```bash
 $ yarn add nexus-request
 ```
-
 
 Once the package is installed, you can import the library using `import` or `require` approach:
 
@@ -71,7 +67,7 @@ const response = await nexus('https://httpbin.org/post', {
 })
 
 console.log('Response: ', response.data)
-````
+```
 
 ## Example
 
@@ -233,8 +229,11 @@ const instance = new Nexus({
 The available instance methods are listed below. The specified config will be merged with the instance config.
 
 ##### nexus#get(url[, config])
+
 ##### nexus#delete(url[, config])
+
 ##### nexus#post(url[, data[, config]])
+
 ##### nexus#put(url[, data[, config]])
 
 ## Request Config
