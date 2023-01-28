@@ -1,5 +1,5 @@
 {
-	"name": "nexusjs",
+	"name": "nexus-request",
 	"version": "1.0.0",
 	"description": "HTTP/HTTP2 client for NodeJS with ZSTD support.",
 	"main": "./dist/index.ts",
