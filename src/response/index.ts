@@ -21,7 +21,7 @@ export class Response {
 		'gzip'
 	]
 
-	private options?: NexusResponseOptions
+	private options: NexusResponseOptions
 
 	constructor(options?: NexusResponseOptions) {
 		this.options = options || {
@@ -61,8 +61,8 @@ export class Response {
 			response = await this.transformer(fullResponse)
 		}
 
-		if (response.statusCode !== 200) {
-			throw new NexusException(fullResponse)
+		if (response.statusCode > 308) {
+			throw new NexusException(fullResponse, this.options)
 		}
 
 		return response

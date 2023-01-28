@@ -1,6 +1,6 @@
 {
 	"name": "nexus-request",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"description": "HTTP/HTTP2 client for NodeJS with ZSTD support.",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -21,7 +21,7 @@
 		"prepare": "npm run build",
 		"test": "tsx watch tests/index.ts",
 		"build": "tsup",
-		"release": "yarn publish --access public"
+		"release": "rm -rf dist && yarn publish --access public"
 	},
 	"tsup": {
 		"entry": [
