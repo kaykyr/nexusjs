@@ -12,7 +12,13 @@ export class NexusException extends Error {
 			`Server returned an ${response.statusCode} status response on requested URL ${response.request.fullURL}`,
 		)
 		this.name = 'NexusException'
-		this.data = response.data
+
+        if (response.headers['content-type'] === 'application/json') {
+            this.data = JSON.parse(response.data)
+        } else {
+            this.data = response.data
+        }
+
 		this.headers = response.headers
 		this.request = response.request
 		this.statusCode = response.statusCode
