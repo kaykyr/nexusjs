@@ -43,18 +43,6 @@ export class Proxy {
 				this.authority.protocol === 'https:' ? ':443' : ':80'
 			}`
 
-            console.log({
-                method: 'CONNECT',
-                rejectUnauthorized: false,
-                hostname: this.proxy.hostname,
-                port: this.proxy.port,
-                path: connectPath,
-                headers: {
-                    ...this.getAuthorizationHeaders(),
-                    host: connectPath,
-                },
-            })
-
 			const tunnel = network
 				.request({
 					method: 'CONNECT',
