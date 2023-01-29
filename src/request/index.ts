@@ -13,7 +13,7 @@ import { NexusRequestOptions, NexusFullResponse, NexusData } from '../interface'
 import { InvalidArgumentException, ProxyException, TimeoutException } from '../exception'
 
 export class Request {
-	protected version: string = '1.1.1'
+	protected version: string = '1.1.2'
 	public options: NexusRequestOptions
 
 	constructor(options?: NexusRequestOptions) {
