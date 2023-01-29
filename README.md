@@ -46,13 +46,13 @@ $ yarn add nexus-request
 Once the package is installed, you can import the library using `import` or `require` approach:
 
 ```js
-import { Nexus, NexusException } from 'nexus-request'
+import { Nexus, NexusException } from './libs/nexusjs/src'
 ```
 
 You can also use the default export, since the named export is a export of Nexus class instance calling rawRequest method:
 
 ```js
-import nexus from 'nexus-request'
+import nexus from './libs/nexusjs/src'
 
 const response = await nexus('https://httpbin.org/post', {
     method: 'post',
@@ -75,7 +75,7 @@ console.log('Response: ', response.data)
 > In order to gain the TypeScript typings (for intellisense / autocomplete) while using CommonJS imports with `require()`, use the following approach:
 
 ```js
-import { Nexus } from 'nexus-request'
+import { Nexus } from './libs/nexusjs/src'
 
 const nexus = new Nexus()
 
@@ -192,7 +192,7 @@ Requests can be made by passing the relevant config to `nexus`.
 
 ```js
 // Send a POST request
-import nexus from 'nexus-request'
+import nexus from './libs/nexusjs/src'
 
 nexus('https://httpbin.org/post', {
   method: 'post',
@@ -211,7 +211,7 @@ You can create a new instance of nexus with a custom config.
 ##### nexus.create([config])
 
 ```js
-import { Nexus } from 'nexus-request'
+import { Nexus } from './libs/nexusjs/src'
 
 const instance = new Nexus({
   baseURL: 'https://httpbin.org/',

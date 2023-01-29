@@ -59,8 +59,10 @@ export class Proxy {
 
 			tunnel.once('connect', (res, socket) => {
 				if (res.statusCode !== 200) {
-					throw new ProxyException(
-						`Proxy server returned ${res.statusCode}`,
+					reject(
+						new ProxyException(
+							`Proxy server returned ${res.statusCode}`,
+						),
 					)
 				}
 

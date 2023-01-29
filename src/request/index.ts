@@ -1,5 +1,6 @@
 import querystring, { ParsedUrlQueryInput } from 'node:querystring'
 import http, { IncomingMessage } from 'node:http'
+import { Socket } from 'node:net'
 import https from 'node:https'
 import http2 from 'node:http2'
 import os from 'node:os'
@@ -9,8 +10,7 @@ import { Proxy } from './proxy'
 import { keysToLower } from '../helpers'
 
 import { NexusRequestOptions, NexusFullResponse, NexusData } from '../interface'
-import { InvalidArgumentException } from '../exception'
-import { Socket } from 'node:net'
+import { InvalidArgumentException, ProxyException, TimeoutException } from '../exception'
 
 export class Request {
 	protected version: string = '1.1.1'
@@ -55,6 +55,7 @@ export class Request {
 				`${baseURL.protocol ? baseURL.protocol : 'https:'}//` +
 				requestURL?.replace(/\/\//g, '/')
 		} catch (error) {
+            console.log(error)
 			throw new InvalidArgumentException('Invalid URL provided')
 		}
 
@@ -93,12 +94,16 @@ export class Request {
                 const proxy = new Proxy(new URL(this.options.proxy), url)
 
                 socket = await proxy.connect()
-            } catch (error) {
-                throw error
+            } catch (error: any) {
+                throw new ProxyException(error.message)
             }
 		}
 
 		return new Promise((resolve, reject) => {
+            const requestTimeout = setTimeout(() => {
+                reject(new TimeoutException('Request timed out'))
+            }, this.options.timeout || 10000)
+
 			let client: any
 			let requestOptions: object = {
 				'content-length': postData ? Buffer.byteLength(postData) : 0,
@@ -174,6 +179,7 @@ export class Request {
 						})
 
 						serverResponse.on('end', () => {
+                            clearTimeout(requestTimeout)
 							resolve(response)
 						})
 
@@ -197,6 +203,7 @@ export class Request {
 					.on('end', () => {
 						client.close()
 						response.statusCode = response.headers[':status']
+                        clearTimeout(requestTimeout)
 
 						resolve({ ...response, data: Buffer.concat(buffer) })
 					})

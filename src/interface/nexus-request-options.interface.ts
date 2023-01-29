@@ -10,6 +10,7 @@ export interface NexusRequestOptions {
 	params?: object
 	headers?: object
 	baseURL?: string
+	timeout?: number
     fullURL?: string
 	response?: NexusResponseOptions
 	encoding?:
