@@ -13,7 +13,7 @@ import { NexusRequestOptions, NexusFullResponse, NexusData } from '../interface'
 import { InvalidArgumentException, ProxyException, TimeoutException } from '../exception'
 
 export class Request {
-	protected version: string = '1.1.2'
+	protected version: string = '1.1.4'
 	public options: NexusRequestOptions
 
 	constructor(options?: NexusRequestOptions) {
@@ -55,7 +55,7 @@ export class Request {
 				`${baseURL.protocol ? baseURL.protocol : 'https:'}//` +
 				requestURL?.replace(/\/\//g, '/')
 		} catch (error) {
-            console.log(error)
+            console.log('Method: ', method, 'Path: ', path, 'Data: ', data)
 			throw new InvalidArgumentException('Invalid URL provided')
 		}
 
