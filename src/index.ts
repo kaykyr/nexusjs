@@ -69,42 +69,44 @@ export class Nexus {
 		path?: string,
 		data?: NexusData,
 	): Promise<NexusResponse> {
-        try {
-            const response = await this.request.make(method, path, {
-                headers: {
-                    ...this.headersData,
-                    ...data?.headers,
-                },
-                params: {
-                    ...this.paramsData,
-                    ...data?.params,
-                },
-                data: {
-                    ...this.postData,
-                    ...data?.data,
-                },
-            })
-            return await this.response.build(response)
-        } catch (error) {
-            throw error
-        }
+		try {
+			const response = await this.request.make(method, path, {
+				headers: {
+					...this.headersData,
+					...data?.headers,
+				},
+				params: {
+					...this.paramsData,
+					...data?.params,
+				},
+				data: {
+					...this.postData,
+					...data?.data,
+				},
+			})
+			return await this.response.build(response)
+		} catch (error) {
+			throw error
+		}
 	}
 
-	public rawRequest(url: string, options: NexusRequestOptions): Promise<NexusResponse> {
-        delete options.url
-        delete options.path
-        delete options.baseURL
+	public rawRequest(
+		url: string,
+		options: NexusRequestOptions,
+	): Promise<NexusResponse> {
+		const _options = options
+		delete _options.url
+		delete _options.path
+		delete _options.baseURL
 
-		return this._request(
-			<string>options.method!.toUpperCase(),
-			url,
-			{ data: options.data },
-		)
+		return this._request(<string>_options.method!.toUpperCase(), url, {
+			data: _options.data,
+		})
 	}
 }
 
 export default async function nexus(
-    url: string,
+	url: string,
 	options: NexusRequestOptions,
 ): Promise<NexusResponse> {
 	const nexus = new Nexus(options)

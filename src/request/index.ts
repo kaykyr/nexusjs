@@ -55,7 +55,6 @@ export class Request {
 				`${baseURL.protocol ? baseURL.protocol : 'https:'}//` +
 				requestURL?.replace(/\/\//g, '/')
 		} catch (error) {
-            console.log('Method: ', method, 'Path: ', path, 'Data: ', data)
 			throw new InvalidArgumentException('Invalid URL provided')
 		}
 
