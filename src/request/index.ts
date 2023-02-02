@@ -10,7 +10,11 @@ import { Proxy } from './proxy'
 import { keysToLower } from '../helpers'
 
 import { NexusRequestOptions, NexusFullResponse, NexusData } from '../interface'
-import { InvalidArgumentException, ProxyException, TimeoutException } from '../exception'
+import {
+	InvalidArgumentException,
+	ProxyException,
+	TimeoutException,
+} from '../exception'
 
 export class Request {
 	protected version: string = '1.1.4'
@@ -89,19 +93,19 @@ export class Request {
 				throw new InvalidArgumentException('Proxy must be a string')
 			}
 
-            try {
-                const proxy = new Proxy(new URL(this.options.proxy), url)
+			try {
+				const proxy = new Proxy(new URL(this.options.proxy), url)
 
-                socket = await proxy.connect()
-            } catch (error: any) {
-                throw new ProxyException(error.message)
-            }
+				socket = await proxy.connect()
+			} catch (error: any) {
+				throw new ProxyException(error.message)
+			}
 		}
 
 		return new Promise((resolve, reject) => {
-            const requestTimeout = setTimeout(() => {
-                reject(new TimeoutException('Request timed out'))
-            }, this.options.timeout || 10000)
+			const requestTimeout = setTimeout(() => {
+				reject(new TimeoutException('Request timed out'))
+			}, this.options.timeout || 10000)
 
 			let client: any
 			let requestOptions: object = {
@@ -178,14 +182,15 @@ export class Request {
 						})
 
 						serverResponse.on('end', () => {
-                            clearTimeout(requestTimeout)
+							clearTimeout(requestTimeout)
 							resolve(response)
 						})
 
 						serverResponse.on('error', (error: any) => {
-							reject(error)
+							clearTimeout(requestTimeout)
 							client.close()
 							request.end()
+							reject(error)
 						})
 					}
 				},
@@ -202,11 +207,11 @@ export class Request {
 					.on('end', () => {
 						client.close()
 						response.statusCode = response.headers[':status']
-                        clearTimeout(requestTimeout)
-
+						clearTimeout(requestTimeout)
 						resolve({ ...response, data: Buffer.concat(buffer) })
 					})
 					.on('error', (error: any) => {
+						clearTimeout(requestTimeout)
 						reject(error)
 					})
 			}

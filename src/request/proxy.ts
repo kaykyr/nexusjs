@@ -70,6 +70,7 @@ export class Proxy {
 			})
 
 			tunnel.once('error', (error) => {
+				tunnel.destroy()
 				reject(error)
 			})
 		})
