@@ -1,0 +1,90 @@
+{
+	"name": "nexus-request",
+	"version": "1.1.8",
+	"description": "HTTP/HTTP2 client for NodeJS with ZSTD support.",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"author": "Kayky Ramos",
+	"license": "MIT",
+	"private": false,
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"files": [
+		"dist"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/kaykyr/nexusjs.git"
+	},
+	"scripts": {
+		"prepare": "npm run build",
+		"test": "tsx watch tests/index.ts",
+		"build": "tsup",
+		"release": "rm -rf dist && yarn publish --access public"
+	},
+	"tsup": {
+		"entry": [
+			"src/**/*"
+		],
+		"format": [
+			"esm",
+			"cjs"
+		],
+		"splitting": false,
+		"sourcemap": true,
+		"clean": true,
+		"dts": true,
+		"external": [
+			"is-zst",
+			"json-bigint",
+			"peek-stream",
+			"process-streams",
+			"through2"
+		],
+		"minify": false,
+		"bundle": true,
+		"target": "es5",
+		"module": "commonjs",
+		"lib": [
+			"esnext"
+		],
+		"sourceMap": true,
+		"outDir": "./dist",
+		"downlevelIteration": true,
+		"strict": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictPropertyInitialization": true,
+		"noImplicitThis": true,
+		"alwaysStrict": true,
+		"noUnusedLocals": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"esModuleInterop": true
+	},
+	"dependencies": {
+		"is-zst": "^1.0.0",
+		"json-bigint": "^1.0.0",
+		"peek-stream": "^1.1.3",
+		"process-streams": "^1.0.1",
+		"through2": "^4.0.2"
+	},
+	"devDependencies": {
+		"@swc/core": "^1.3.29",
+		"@types/json-bigint": "^1.0.1",
+		"@types/node": "^18.11.11",
+		"@types/through2": "^2.0.38",
+		"@typescript-eslint/eslint-plugin": "^4.23.0",
+		"@typescript-eslint/parser": "^4.23.0",
+		"eslint": "^8.24.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"nodemon": "^2.0.20",
+		"prettier": "^2.7.1",
+		"pretty-quick": "^3.1.3",
+		"tsup": "^6.5.0",
+		"tsx": "^3.12.2",
+		"typescript": "^4.9.3"
+	}
+}
