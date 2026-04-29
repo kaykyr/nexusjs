@@ -51,15 +51,15 @@ export function toSnakeCase(value: any): object {
 }
 
 export function keysToLower(obj: { [key: string]: any } | undefined) {
-    if (!obj) return {}
-    const keys = Object.keys(obj)
-    const n: { [key: string]: any } = {}
-    let key: string
-    let val: any
-    for (let i = 0; i < keys.length; i++) {
-        key = keys[i]
-        val = obj[key]
-        n[key.toLowerCase()] = val
-    }
-    return n
+	if (!obj) return {}
+	const keys = Object.keys(obj)
+	const n: { [key: string]: any } = {}
+	let key: string
+	let val: any
+	for (let i = 0; i < keys.length; i++) {
+		key = keys[i]
+		val = obj[key]
+		n[key.toLowerCase()] = val
+	}
+	return n
 }

@@ -11,7 +11,7 @@ export interface NexusRequestOptions {
 	headers?: object
 	baseURL?: string
 	timeout?: number
-    fullURL?: string
+	fullURL?: string
 	response?: NexusResponseOptions
 	encoding?:
 		| 'ascii'

@@ -1,6 +1,6 @@
 export interface NexusData {
-    setURLEncoded?: boolean
+	setURLEncoded?: boolean
 	headers?: object
-    params?: object
+	params?: object
 	data?: object
 }

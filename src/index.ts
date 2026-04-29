@@ -101,13 +101,13 @@ export class Nexus {
 		delete _options.path
 		delete _options.baseURL
 
-        try {
-            return this._request(<string>_options.method!.toUpperCase(), url, {
-                data: _options.data,
-            })
-        } catch (error) {
-            throw new ConnectionException(error)
-        }
+		try {
+			return this._request(<string>_options.method!.toUpperCase(), url, {
+				data: _options.data,
+			})
+		} catch (error) {
+			throw new ConnectionException(error)
+		}
 	}
 }
 

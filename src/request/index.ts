@@ -99,25 +99,25 @@ export class Request {
 				socket = await proxy.connect()
 			} catch (error: any) {
 				// throw new ProxyException(error)
-                return new Promise((resolve, reject) => {
-                    resolve({
-                        request: this.options,
-                        statusCode: 0,
-                        headers: {},
-                        data: '',
-                    })
-                })
+				return new Promise((resolve, reject) => {
+					resolve({
+						request: this.options,
+						statusCode: 0,
+						headers: {},
+						data: '',
+					})
+				})
 			}
 		}
 
 		return new Promise((resolve, reject) => {
 			const requestTimeout = setTimeout(() => {
-                resolve({
-                    request: this.options,
-                    statusCode: 0,
-                    headers: {},
-                    data: '',
-                })
+				resolve({
+					request: this.options,
+					statusCode: 0,
+					headers: {},
+					data: '',
+				})
 				// reject(new TimeoutException('Request timed out'))
 			}, this.options.timeout || 10000)
 
@@ -130,34 +130,37 @@ export class Request {
 				...headers,
 			}
 
-            if (postData) requestOptions = {
-                ...requestOptions,
-                'content-type':
-					this.options?.setURLEncoded || data?.setURLEncoded
-						? 'application/x-www-form-urlencoded; charset=UTF-8'
-						: 'application/json'
-            }
+			if (postData)
+				requestOptions = {
+					...requestOptions,
+					'content-type':
+						this.options?.setURLEncoded || data?.setURLEncoded
+							? 'application/x-www-form-urlencoded; charset=UTF-8'
+							: 'application/json',
+				}
 
 			if (this.options?.http2) {
-				client = http2.connect(
-					url.origin,
-					socket
-						? {
-								host: url.hostname,
-								socket,
-								ALPNProtocols: socket ? ['h2'] : undefined,
-						}
-						: undefined,
-				).on('error', e => {
-                    console.error(`*ERROR*: ${e}`)
-                    delete client[url.origin]
-                    resolve({
-                        request: this.options,
-                        statusCode: 0,
-                        headers: {},
-                        data: '',
-                    })
-                })
+				client = http2
+					.connect(
+						url.origin,
+						socket
+							? {
+									host: url.hostname,
+									socket,
+									ALPNProtocols: socket ? ['h2'] : undefined,
+							  }
+							: undefined,
+					)
+					.on('error', (e) => {
+						console.error(`*ERROR*: ${e}`)
+						delete client[url.origin]
+						resolve({
+							request: this.options,
+							statusCode: 0,
+							headers: {},
+							data: '',
+						})
+					})
 
 				requestOptions = {
 					':method': method,
@@ -239,7 +242,7 @@ export class Request {
 					})
 					.on('error', (error: any) => {
 						clearTimeout(requestTimeout)
-                        return this.make(method, path, data)
+						return this.make(method, path, data)
 						// reject(error)
 					})
 			}
