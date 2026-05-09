@@ -72,6 +72,16 @@ export class Nexus {
 		data?: NexusData,
 	): Promise<NexusResponse> {
 		try {
+			// Pass Buffer bodies through verbatim. `{ ...buffer }` would iterate
+			// the indexed numeric properties of the Buffer and turn it into a
+			// giant `{0:255,1:216,...}` plain object, which Request.make would
+			// then JSON.stringify — multiplying the body size 10–12x and breaking
+			// any binary upload (e.g. Instagram rupload_igphoto, where it
+			// triggered "Image upload transcode non-retryable failure" 400).
+			const mergedData = Buffer.isBuffer(data?.data)
+				? (data!.data as any)
+				: { ...this.postData, ...(data as any)?.data }
+
 			const response = await this.request.make(method, path, {
 				headers: {
 					...this.headersData,
@@ -81,10 +91,7 @@ export class Nexus {
 					...this.paramsData,
 					...data?.params,
 				},
-				data: {
-					...this.postData,
-					...data?.data,
-				},
+				data: mergedData,
 			})
 			return await this.response.build(response)
 		} catch (error) {
