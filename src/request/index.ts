@@ -4,6 +4,7 @@ import { Socket } from 'node:net'
 import https from 'node:https'
 import http2 from 'node:http2'
 import os from 'node:os'
+import zlib from 'node:zlib'
 
 import { Proxy } from './proxy'
 
@@ -65,9 +66,14 @@ export class Request {
 		this.options.fullURL = requestURL
 		const url = new URL(requestURL)
 
-		let postData: string | null = null
+		let postData: string | Buffer | null = null
 
-		if (data?.data && Object.keys(data.data).length > 0) {
+		// Raw binary body (e.g. Instagram resumable photo upload) — caller passed
+		// a Buffer in `data.data`. Skip URL-encoding/JSON-stringify and let the
+		// caller's Content-Type header through unchanged.
+		if (Buffer.isBuffer(data?.data)) {
+			postData = data!.data as Buffer
+		} else if (data?.data && Object.keys(data.data).length > 0) {
 			if (this.options?.setURLEncoded || data?.setURLEncoded) {
 				postData = querystring.stringify(<ParsedUrlQueryInput>data.data)
 			} else {
@@ -84,6 +90,20 @@ export class Request {
 			if (headers[key] === undefined) {
 				delete headers[key]
 			}
+		}
+
+		// If caller asked for gzip via Content-Encoding header, actually gzip the body.
+		// PHP's Request.php does this with zlib_encode; previously nexusjs delegated
+		// to the HTTP client which never compressed, so IG received an uncompressed
+		// body labeled gzip and rejected the request.
+		const contentEncoding = (headers['content-encoding'] || '')
+			.toString()
+			.toLowerCase()
+		if (
+			postData &&
+			(contentEncoding === 'gzip' || contentEncoding.includes('gzip'))
+		) {
+			postData = zlib.gzipSync(Buffer.from(postData))
 		}
 
 		let socket: Socket | undefined = undefined
@@ -130,7 +150,10 @@ export class Request {
 				...headers,
 			}
 
-			if (postData)
+			// Only inject a default content-type if the caller didn't set one.
+			// Resumable photo upload sends `application/octet-stream`; previously
+			// it was clobbered to JSON, breaking the rupload protocol.
+			if (postData && !(requestOptions as any)['content-type'])
 				requestOptions = {
 					...requestOptions,
 					'content-type':
