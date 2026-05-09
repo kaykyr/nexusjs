@@ -143,11 +143,27 @@ export class Request {
 
 			let client: any
 			let requestOptions: object = {
-				'content-length': postData ? Buffer.byteLength(postData) : 0,
+				// HTTP/2 (RFC 7540 §8.1.2.6) only allows string header values.
+				// Sending a number for content-length, while accepted by Node's
+				// http2 client, is rejected by some upstream servers (Instagram's
+				// rupload edge silently transcode-fails the request). Always
+				// stringify numerics.
+				'content-length': postData
+					? String(Buffer.byteLength(postData))
+					: '0',
 				'user-agent': `NexusJS/${
 					this.version
 				} (${os.type()} ${os.release()}; ${os.arch()})`,
 				...headers,
+			}
+			// Same rule as above: any caller-supplied numeric header (e.g.
+			// X-Entity-Length: 267438 as a number, or Ig-Intended-User-Id) must
+			// be a string before being emitted as an HTTP/2 HEADERS frame.
+			for (const k of Object.keys(requestOptions)) {
+				const v = (requestOptions as any)[k]
+				if (typeof v === 'number') {
+					(requestOptions as any)[k] = String(v)
+				}
 			}
 
 			// Only inject a default content-type if the caller didn't set one.
